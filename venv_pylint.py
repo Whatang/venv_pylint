@@ -58,6 +58,31 @@ help specify the right pylint rcfile to use:
 '''
 import sys
 import os
+import glob
+
+def get_capitalized_filename(name):
+    """Windows filenames are case-insensitive. Find the right case for a path.
+
+    Some filenames are returned by some functions as all lower-case (e.g. the
+    inspect module). Functions from other modules (e.g. lint), expect that
+    filenames are case-sensitive, and therefore do not match these filenames
+    correctly. It is therefore important to get the correct capitalization of
+    a filename for passing to lint.
+
+    This function is taken from user xvorsx's answer on StackOverflow at:
+
+    http://stackoverflow.com/questions/3692261/in-python-how-can-i-get-the-correctly-cased-path-for-a-file/14742779#14742779
+    """
+    dirs = name.split('\\')
+    # disk letter
+    test_name = [dirs[0].upper()]
+    for this_dir in dirs[1:]:
+        test_name += ["%s[%s]" % (this_dir[:-1], this_dir[-1])]
+    res = glob.glob('\\'.join(test_name))
+    if not res:
+        # File not found
+        return None
+    return res[0]
 
 def get_lint_path():
     """Find the path to lint.py
@@ -71,7 +96,8 @@ def get_lint_path():
     except ImportError:
         return ""
     pylint_dir = os.path.dirname(inspect.getfile(pylint))
-    return os.path.join(pylint_dir, "lint.py")
+    pylint_file = os.path.join(pylint_dir, "lint.py")
+    return get_capitalized_filename(pylint_file)
 
 def find_venv_rcfile(args, lint_name):
     """Find a project-specific pylint rcfile.
@@ -93,7 +119,7 @@ def find_venv_rcfile(args, lint_name):
     while last_dir != current_dir:
         potential_rc_file = os.path.join(current_dir, lint_name)
         if os.path.exists(potential_rc_file):
-            return potential_rc_file
+            return get_capitalized_filename(potential_rc_file)
         last_dir = current_dir
         current_dir = os.path.dirname(current_dir)
     return None
@@ -157,7 +183,9 @@ def main():
         sys.exit(1)
     print "PyLint is at " + lint_path
     import subprocess
-    args = [sys.executable, lint_path] + process_arguments()
+    args = [get_capitalized_filename(sys.executable),
+            lint_path] + process_arguments()
+    print " ".join(args)
     subprocess.call(args = args,
                     stdout = sys.stdout, stderr = sys.stderr)
 
