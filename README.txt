@@ -1,3 +1,5 @@
+venv_pylint Copyright (C) 2014 Michael Thomas
+
 venv_pylint wraps the right pylint for the current virtualenv.
 
 Using virtualenv is great for isolating your python environment for the current
@@ -55,3 +57,22 @@ help specify the right pylint rcfile to use:
 --rc-name=RC_NAME
   Specify a different file name to search for as the per-project rcfile,
   instead of the default "lint.rc".
+  
+LICENSING INFORMATION
+
+venv_pylint is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+See the file COPYING for details of the GNU GPL.
+
+Contact details: venv_pylint@whatang.org
