@@ -142,6 +142,7 @@ def process_arguments():
     if has_override:
         args.remove(override_arg)
     has_rcfile = any(x.startswith(rcfile_arg) for x in args)
+    has_pylintrc = os.path.exists("pylintrc") or os.path.exists(".pylintrc") or False
     if any(x.startswith(rc_name_arg) for x in args):
         lint_args = set()
         for arg in args:
@@ -163,8 +164,11 @@ def process_arguments():
                 print "Using rc file " + venv_rcfile
                 args[index] = new_rcfile_arg
     elif not has_rcfile and venv_rcfile is not None:
-        print "Using rc file " + venv_rcfile
-        args.insert(0, new_rcfile_arg)
+        if has_pylintrc:
+            print "Using pylintrc in working directory"
+        else:
+            print "Using rc file " + venv_rcfile
+            args.insert(0, new_rcfile_arg)
     print "Final pylint arguments are:"
     print " ".join(args)
     return args

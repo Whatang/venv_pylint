@@ -41,7 +41,11 @@ specified, i.e. the first file which pylint will analyse. If no such lint.rc
 file is found, then the parent directory will be searched, then the next
 directory up, and so on, until a lint.rcis found or the file system root is
 reached. If any such lint.rc file is found it will be passed to pylint as an
-argument and used to configure for the code analysis.
+argument and used to configure for the code analysis. NOTE: You can also achieve
+this by having a file named pylintrc in the project root, and no --rcfile
+option specified. When run from PyDev, pylint will pick this up since the
+project root is the working directory where pylint is run from, and pylint
+looks for a file named pylintrc in its working directory.
 
 There are some additional options you can give to this script which will
 help specify the right pylint rcfile to use:
