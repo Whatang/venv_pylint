@@ -14,14 +14,8 @@ specified instance of pylint. If your project has its own Python interpreter in
 the virtualenv, then running a pylint installed in a different interpreter will
 fail.
 
-Additionally, it is sometimes helpful to have different versions of the pylint
-rc file for different projects, in order to specify different types of code
-cehcking. A Django project may have different requirements from a PyQt one.
-Again, PyDev gives no way to specify different per-project Pylint setups.
-
 This script wraps pylint so that it automatically finds for the right version
-of pylint to run for the Python interpreter which is running it. It can also
-be configured to search for and use a project-specific pylint rc file.
+of pylint to run for the Python interpreter which is running it.
 
 To use this script with PyDev, make sure that you have pylint installed in each
 of the interpreters that you have configured in PyDev. Then simply put
@@ -33,28 +27,11 @@ pylint for each interpreter.
 You can also run this script directly with any python interpreter, and it will
 find and run the correct version of pylint (assuming it is installed).
 
-If no --rcfile option is specified, then venv_pylint will look for
-a file called lint.rc in the directory containing the first target file
-specified, i.e. the first file which pylint will analyse. If no such lint.rc
-file is found, then the parent directory will be searched, then the next
-directory up, and so on, until a lint.rcis found or the file system root is
-reached. If any such lint.rc file is found it will be passed to pylint as an
-argument and used to configure for the code analysis.
-
-There are some additional options you can give to this script which will
-help specify the right pylint rcfile to use:
-
---override-rc
-  If this option is given then the rcfile searching described above is
-  performed even if a --rcfile option is given. If a lint.rc is found, then
-  it will replace the --rcfile specified on the command line. Otherwise, the
-  existing --rcfile given will be used. This allows a default rcfile to be
-  specified, while allowing projects to override it with their own if
-  necessary.
-
---rc-name=RC_NAME
-  Specify a different file name to search for as the per-project rcfile,
-  instead of the default "lint.rc".
+It is sometimes helpful to have a per-project pylint rcfile. You can achieve
+this by having a file named pylintrc in the project root, and no --rcfile
+option specified. When run from PyDev, pylint will pick this up since the
+project root is the working directory where pylint is run from, and pylint
+looks for a file named pylintrc in its working directory.
 '''
 import sys
 import os
@@ -99,87 +76,11 @@ def get_lint_path():
     pylint_file = os.path.join(pylint_dir, "lint.py")
     return get_capitalized_filename(pylint_file)
 
-def find_venv_rcfile(args, lint_name):
-    """Find a project-specific pylint rcfile.
-
-    1. Find the first pylint target given.
-    2. Look in the directory containing that target, and all parent dirs
-       until a file matching lint_name is found.
-    """
-    for arg in args:
-        if not arg.startswith("-"):
-            if os.path.isdir(arg):
-                current_dir = arg
-            else:
-                current_dir = os.path.dirname(arg)
-            break
-    else:
-        return None
-    last_dir = None
-    while last_dir != current_dir:
-        potential_rc_file = os.path.join(current_dir, lint_name)
-        if os.path.exists(potential_rc_file):
-            return get_capitalized_filename(potential_rc_file)
-        last_dir = current_dir
-        current_dir = os.path.dirname(current_dir)
-    return None
-
-def process_arguments():
-    """Process/remove venv_pylint specific arguments before passing to pylint.
-
-    This function takes the arguments specified on the command line and
-    processes them to remove the venv_pylint specific options and to update/add
-    the --rcfile option as necessary.
-    """
-    override_arg = "--override-rc"
-    rcfile_arg = "--rcfile"
-    rc_name_arg = "--rc-name"
-    lint_file_name = "lint.rc"
-    args = sys.argv[1:]
-    print "Initial pylint arguments are:"
-    print " ".join(args)
-    has_override = any(x == override_arg for x in args)
-    if has_override:
-        args.remove(override_arg)
-    has_rcfile = any(x.startswith(rcfile_arg) for x in args)
-    has_pylintrc = os.path.exists("pylintrc") or os.path.exists(".pylintrc") or False
-    if any(x.startswith(rc_name_arg) for x in args):
-        lint_args = set()
-        for arg in args:
-            if arg.startswith(rc_name_arg):
-                if '=' not in arg:
-                    continue
-                lint_file_name = arg.split('=', 1)[1]
-                lint_file_name = lint_file_name.strip()
-                lint_args.add(arg)
-        for arg in lint_args:
-            args.remove(arg)
-    venv_rcfile = find_venv_rcfile(args, lint_file_name)
-    new_rcfile_arg = (rcfile_arg + "=")
-    if venv_rcfile is not None:
-        new_rcfile_arg += venv_rcfile
-    if has_override and has_rcfile and venv_rcfile is not None:
-        for index, arg in enumerate(args):
-            if arg.startswith(rcfile_arg):
-                print "Using rc file " + venv_rcfile
-                args[index] = new_rcfile_arg
-    elif not has_rcfile and venv_rcfile is not None:
-        if has_pylintrc:
-            print "Using pylintrc in working directory"
-        else:
-            print "Using rc file " + venv_rcfile
-            args.insert(0, new_rcfile_arg)
-    print "Final pylint arguments are:"
-    print " ".join(args)
-    return args
-
 def main():
-    """Wrap pylint: run the right version with the correct rcfile.
+    """Wrap pylint: run the right version for the current interpreter.
 
     1. Find the right version of pylint.
-    2. Update the arguments to remove venv_pylint specific options and set the
-       --rcfile option correctly.
-    3. Run pylint with the new arguments, piping stdout/stderr appropriately.
+    2. Run pylint with the interpreter, piping stdout/stderr appropriately.
     """
     lint_path = get_lint_path()
     if not lint_path:
@@ -188,7 +89,7 @@ def main():
     print "PyLint is at " + lint_path
     import subprocess
     args = [get_capitalized_filename(sys.executable),
-            lint_path] + process_arguments()
+            lint_path] + sys.argv[1:]
     print " ".join(args)
     subprocess.call(args = args,
                     stdout = sys.stdout, stderr = sys.stderr)
