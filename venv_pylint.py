@@ -88,8 +88,7 @@ def main():
         sys.exit(1)
     print "PyLint is at " + lint_path
     import subprocess
-    args = [get_capitalized_filename(sys.executable),
-            lint_path] + sys.argv[1:]
+    args = [get_capitalized_filename(sys.executable), lint_path] + sys.argv[1:]
     print " ".join(args)
     subprocess.call(args = args,
                     stdout = sys.stdout, stderr = sys.stderr)
