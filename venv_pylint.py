@@ -33,9 +33,12 @@ option specified. When run from PyDev, pylint will pick this up since the
 project root is the working directory where pylint is run from, and pylint
 looks for a file named pylintrc in its working directory.
 '''
-import sys
-import os
+from __future__ import print_function
+
 import glob
+import os
+import sys
+
 
 def get_capitalized_filename(name):
     """Windows filenames are case-insensitive. Find the right case for a path.
@@ -61,6 +64,15 @@ def get_capitalized_filename(name):
         return None
     return res[0]
 
+def get_pylint_exe_path():
+    """Find the path to pylint.exe
+    """
+    exedir = os.path.dirname(get_capitalized_filename(sys.executable))
+    pylint_exe = os.path.join(exedir, "pylint.exe")
+    if os.path.exists(pylint_exe):
+        return pylint_exe
+    return None
+
 def get_lint_path():
     """Find the path to lint.py
 
@@ -84,12 +96,17 @@ def main():
     """
     lint_path = get_lint_path()
     if not lint_path:
-        print "Could not find pylint!"
+        print("Could not find pylint!")
         sys.exit(1)
-    print "PyLint is at " + lint_path
+    print("PyLint is at " + lint_path)
+    args = [get_capitalized_filename(sys.executable), lint_path]
+    if os.name == 'nt':
+        pylint_exe = get_pylint_exe_path()
+        if pylint_exe:
+            args = [pylint_exe]
     import subprocess
-    args = [get_capitalized_filename(sys.executable), lint_path] + sys.argv[1:]
-    print " ".join(args)
+    args = args + sys.argv[1:]
+    print(" ".join(args))
     subprocess.call(args = args,
                     stdout = sys.stdout, stderr = sys.stderr)
 
